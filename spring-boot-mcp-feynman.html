@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Spring Boot + MCP — Feynman Visual Guide</title>
+<style>
+  :root{
+    --bg:#07111f; --panel:#0d1b2a; --panel2:#10243a; --text:#e7eef7;
+    --muted:#9fb2c8; --line:#24415f; --accent:#5eead4; --accent2:#60a5fa;
+    --warn:#fbbf24; --ok:#34d399; --bad:#fb7185; --code:#06101c;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(96,165,250,.13), transparent 30%),
+      radial-gradient(circle at 90% 10%, rgba(94,234,212,.10), transparent 25%),
+      var(--bg);
+    color:var(--text); line-height:1.65;
+  }
+  .wrap{max-width:1180px;margin:auto;padding:28px 18px 80px}
+  .hero{
+    padding:38px;border:1px solid var(--line);border-radius:24px;
+    background:linear-gradient(145deg,rgba(16,36,58,.95),rgba(8,20,35,.95));
+    box-shadow:0 20px 70px rgba(0,0,0,.28)
+  }
+  h1{font-size:clamp(34px,6vw,66px);line-height:1.03;margin:0 0 16px;letter-spacing:-1.8px}
+  h2{font-size:30px;margin:58px 0 18px;letter-spacing:-.5px}
+  h3{font-size:21px;margin:0 0 10px}
+  p{margin:10px 0}
+  .lead{font-size:20px;color:#c7d7e8;max-width:880px}
+  .pill{display:inline-block;padding:6px 11px;border-radius:999px;border:1px solid #2e5c7d;color:#bfe7ff;background:#0c2437;margin:4px 6px 4px 0;font-size:13px}
+  .gold{color:var(--warn)} .green{color:var(--ok)} .blue{color:#86bfff}.teal{color:var(--accent)}
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .card{
+    border:1px solid var(--line); background:rgba(13,27,42,.92); border-radius:18px;
+    padding:20px; position:relative; overflow:hidden
+  }
+  .card:before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:2px;background:linear-gradient(90deg,var(--accent2),var(--accent),transparent)}
+  .big{font-size:38px;font-weight:800;line-height:1.05}
+  .muted{color:var(--muted)}
+  .analogy{
+    margin-top:22px;padding:22px;border-radius:18px;border:1px solid #3a556e;
+    background:linear-gradient(135deg,#132840,#0b1d2d)
+  }
+  .truck{font-size:64px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.25))}
+  .flow{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    padding:22px;border-radius:18px;background:#091827;border:1px solid var(--line)
+  }
+  .node{
+    flex:1 1 130px;min-height:94px;border:1px solid #2a4a68;border-radius:14px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12px;
+    background:#0f2235;transition:.25s transform,.25s border-color,.25s box-shadow
+  }
+  .node:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 10px 26px rgba(94,234,212,.09)}
+  .arrow{font-size:26px;color:#6f91ad}
+  .mini{font-size:12px;color:var(--muted)}
+  code,pre{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
+  pre{
+    background:var(--code);border:1px solid #1a3650;border-radius:14px;padding:16px;
+    overflow:auto;color:#d9e8f5;font-size:13px;line-height:1.55
+  }
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  button{
+    font:inherit;color:var(--text);background:#0c2235;border:1px solid #2d4d69;
+    padding:9px 13px;border-radius:10px;cursor:pointer
+  }
+  button:hover,button.active{border-color:var(--accent);background:#12344a}
+  .tabpane{display:none}.tabpane.active{display:block}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .rest{border-color:#315e8f}.mcp{border-color:#287d71}
+  table{width:100%;border-collapse:collapse;background:#0b1a29;border-radius:14px;overflow:hidden}
+  th,td{padding:12px 13px;border-bottom:1px solid #1d3953;text-align:left;vertical-align:top}
+  th{color:#cce4fb;background:#10263a}
+  .stepper{display:grid;grid-template-columns:220px 1fr;gap:16px}
+  .steps button{display:block;width:100%;margin-bottom:9px;text-align:left}
+  .stage{min-height:270px}
+  .packet{border:1px dashed #3a6b8f;border-radius:14px;padding:16px;background:#091623}
+  .packet .label{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#7fb6d9}
+  .callout{border-left:4px solid var(--warn);padding:10px 14px;background:#1e1a0d;border-radius:8px}
+  .ok{border-left-color:var(--ok);background:#0d211b}
+  .danger{border-left-color:var(--bad);background:#231017}
+  .quizq{margin-bottom:14px}
+  .answer{display:none;margin-top:9px;padding:12px;background:#0a1c2b;border-radius:10px;border:1px solid #284863}
+  .answer.show{display:block}
+  .cheat{font-size:19px}
+  .footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+  a{color:#8ec5ff}
+  .pulse{animation:pulse 2.2s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(94,234,212,.0)}50%{box-shadow:0 0 0 9px rgba(94,234,212,.05)}}
+  @media(max-width:820px){
+    .g2,.g3,.compare{grid-template-columns:1fr}.stepper{grid-template-columns:1fr}
+    .arrow{transform:rotate(90deg);width:100%;text-align:center}
+    .hero{padding:24px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="hero">
+    <span class="pill">Feynman Method</span>
+    <span class="pill">Spring Boot</span>
+    <span class="pill">MCP</span>
+    <span class="pill">HTTP / JSON-RPC</span>
+    <h1>Spring Boot nhận gì và trả gì khi chạy MCP?</h1>
+    <p class="lead">
+      Mục tiêu: sau trang này bạn có thể tự giải thích MCP cho người khác chỉ bằng một câu:
+      <b class="teal">HTTP là đường vận chuyển, MCP là luật đóng gói/giao tiếp, Spring Boot là server thực thi tool.</b>
+    </p>
+  </section>
+
+  <h2>1. Bắt đầu từ thứ bạn đã biết: REST</h2>
+  <div class="grid g3">
+    <div class="card"><div class="big blue">HTTP</div><p class="muted">Con đường vận chuyển request/response.</p></div>
+    <div class="card"><div class="big gold">REST</div><p class="muted">Quy ước bạn thiết kế endpoint + payload business.</p></div>
+    <div class="card"><div class="big teal">MCP</div><p class="muted">Protocol để client/AI khám phá và gọi capability/tool.</p></div>
+  </div>
+
+  <div class="analogy">
+    <div class="grid g2" style="align-items:center">
+      <div>
+        <div class="truck">🚚</div>
+        <h3>Ẩn dụ xe tải</h3>
+        <p><b>HTTP = xe tải.</b> Xe tải không quan tâm nó chở REST hay MCP.</p>
+        <p><b>Body = kiện hàng.</b> REST và MCP đóng kiện theo hai quy tắc khác nhau.</p>
+      </div>
+      <div class="packet">
+        <div class="label">Nhớ câu này</div>
+        <p class="cheat">
+          <b>REST:</b> “Tôi muốn tạo đơn hàng này.”<br>
+          <b>MCP:</b> “Hãy gọi tool <code>get_order</code> với <code>id=1001</code>.”
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <h2>2. Cùng là HTTP, nhưng payload khác nhau</h2>
+  <div class="compare">
+    <div class="card rest">
+      <h3>REST request</h3>
+      <p class="muted">Business payload do API của bạn định nghĩa.</p>
+      <pre>POST /api/orders
+Content-Type: application/json
+
+{
+  "productId": 10,
+  "quantity": 2
+}</pre>
+      <p>Spring MVC thường map body → DTO → Controller.</p>
+    </div>
+    <div class="card mcp">
+      <h3>MCP request</h3>
+      <p class="muted">Protocol message, thường dùng JSON-RPC 2.0.</p>
+      <pre>POST /mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 123,
+  "method": "tools/call",
+  "params": {
+    "name": "get_order",
+    "arguments": {
+      "id": 1001
+    }
+  }
+}</pre>
+      <p>Spring AI MCP layer đọc protocol → tìm tool → gọi Java method.</p>
+    </div>
+  </div>
+
+  <h2>3. Luồng thật sự xảy ra</h2>
+  <div class="flow">
+    <div class="node"><b>👤 User</b><span class="mini">“Đơn 1001 sao rồi?”</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>🧠 AI / Agent</b><span class="mini">quyết định cần tool</span></div>
+    <div class="arrow">→</div>
+    <div class="node pulse"><b>🔌 MCP Client</b><span class="mini">tạo MCP message</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>🚚 HTTP</b><span class="mini">POST /mcp</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>🌱 Spring Boot</b><span class="mini">MCP Server</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>🛠 Tool</b><span class="mini">@McpTool</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>🗄 Service / DB</b><span class="mini">business logic</span></div>
+  </div>
+
+  <h2>4. Bóc từng bước như debug packet</h2>
+  <div class="stepper">
+    <div class="steps">
+      <button class="step active" data-step="0">① Khởi tạo kết nối</button>
+      <button class="step" data-step="1">② Hỏi có tool gì</button>
+      <button class="step" data-step="2">③ Gọi tool</button>
+      <button class="step" data-step="3">④ Java xử lý</button>
+      <button class="step" data-step="4">⑤ Trả kết quả</button>
+    </div>
+    <div class="card stage" id="stage"></div>
+  </div>
+
+  <h2>5. Spring Boot code nhìn như thế nào?</h2>
+  <div class="tabs">
+    <button class="tab active" data-tab="tool">MCP Tool</button>
+    <button class="tab" data-tab="rest">REST Controller</button>
+    <button class="tab" data-tab="service">Shared Service</button>
+  </div>
+  <div id="tool" class="tabpane active">
+    <pre>@Component
+class OrderMcpTools {
+
+    private final OrderService orderService;
+
+    OrderMcpTools(OrderService orderService) {
+        this.orderService = orderService;
+    }
+
+    @McpTool(
+        name = "get_order",
+        description = "Get order information"
+    )
+    Order getOrder(Long id) {
+        return orderService.getOrder(id);
+    }
+}</pre>
+  </div>
+  <div id="rest" class="tabpane">
+    <pre>@RestController
+@RequestMapping("/api/orders")
+class OrderController {
+
+    private final OrderService orderService;
+
+    @GetMapping("/{id}")
+    Order getOrder(@PathVariable Long id) {
+        return orderService.getOrder(id);
+    }
+}</pre>
+  </div>
+  <div id="service" class="tabpane">
+    <pre>@Service
+class OrderService {
+
+    Order getOrder(Long id) {
+        // query DB, validate, apply business rules...
+        return repository.findById(id)
+            .orElseThrow();
+    }
+}</pre>
+  </div>
+  <div class="callout ok">
+    <b>Điểm kiến trúc quan trọng:</b> REST Controller và MCP Tool đều chỉ là <b>inbound adapter</b>.
+    Business logic vẫn nằm trong Service/Domain. Không nên copy business logic sang MCP layer.
+  </div>
+
+  <h2>6. Vậy Spring Boot “nhận” và “trả” chính xác cái gì?</h2>
+  <table>
+    <thead><tr><th>Tầng</th><th>Nhận</th><th>Trả</th></tr></thead>
+    <tbody>
+      <tr><td><b>HTTP transport</b></td><td>HTTP request tới MCP endpoint, mặc định có thể là <code>/mcp</code> với Streamable HTTP.</td><td>HTTP response / stream tùy transport.</td></tr>
+      <tr><td><b>MCP protocol</b></td><td>JSON-RPC message như <code>tools/list</code>, <code>tools/call</code>.</td><td>JSON-RPC result/error theo MCP.</td></tr>
+      <tr><td><b>Spring AI MCP</b></td><td>Tên tool + arguments.</td><td>Chuyển đổi kết quả Java thành MCP tool result.</td></tr>
+      <tr><td><b>Java method</b></td><td><code>Long id = 1001</code></td><td><code>Order</code> / DTO / text / structured result tùy thiết kế.</td></tr>
+      <tr><td><b>AI</b></td><td>Kết quả tool.</td><td>Câu trả lời ngôn ngữ tự nhiên cho user.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>7. Điều rất dễ hiểu sai</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3>❌ MCP không phải AI</h3>
+      <p>MCP không “suy nghĩ”. Nó chỉ chuẩn hóa cách client và server mô tả / gọi capability.</p>
+    </div>
+    <div class="card">
+      <h3>❌ HTTP không đồng nghĩa REST</h3>
+      <p>HTTP là transport. REST có thể chạy trên HTTP; MCP Streamable HTTP cũng chạy trên HTTP.</p>
+    </div>
+    <div class="card">
+      <h3>❌ Không cần tự viết <code>POST /mcp</code></h3>
+      <p>Khi dùng Spring AI MCP starter, infrastructure có thể expose endpoint và xử lý protocol cho bạn.</p>
+    </div>
+    <div class="card">
+      <h3>❌ AI không gọi thẳng DB</h3>
+      <p>Thiết kế tốt là AI → MCP tool → Application/Service → DB. Tool là cửa vào được kiểm soát.</p>
+    </div>
+  </div>
+
+  <h2>8. Mental model 10 giây</h2>
+  <div class="card">
+    <pre style="font-size:15px">REST:
+Frontend ──HTTP──> /api/orders/1001 ──> Controller ──> Service ──> DB
+
+MCP:
+AI Agent ──MCP over HTTP──> /mcp ──> MCP infrastructure ──> @McpTool ──> Service ──> DB
+
+                  ▲
+                  │
+        HTTP chỉ là đường chở dữ liệu</pre>
+    <p class="cheat"><b>Nếu bạn nhớ được sơ đồ này, bạn đã nắm 80% phần nền tảng.</b></p>
+  </div>
+
+  <h2>9. Tự kiểm tra kiểu Feynman</h2>
+  <div class="card">
+    <div class="quizq">
+      <b>Q1.</b> MCP chạy qua HTTP thì MCP có phải REST không?
+      <br><button onclick="toggleAnswer('a1')">Xem đáp án</button>
+      <div id="a1" class="answer">Không. HTTP là transport. REST và MCP là hai cách giao tiếp khác nhau có thể cùng dùng HTTP.</div>
+    </div>
+    <div class="quizq">
+      <b>Q2.</b> Ai quyết định gọi <code>get_order</code>?
+      <br><button onclick="toggleAnswer('a2')">Xem đáp án</button>
+      <div id="a2" class="answer">Agent/model phía client quyết định dựa trên tool metadata. MCP chỉ cung cấp cơ chế discovery và invocation.</div>
+    </div>
+    <div class="quizq">
+      <b>Q3.</b> Business logic nên nằm trong <code>@McpTool</code> không?
+      <br><button onclick="toggleAnswer('a3')">Xem đáp án</button>
+      <div id="a3" class="answer">Không nên. MCP Tool nên mỏng và gọi Service/Application layer, giống Controller.</div>
+    </div>
+    <div class="quizq">
+      <b>Q4.</b> Spring Boot MCP Server có tự “nói tiếng người” với user không?
+      <br><button onclick="toggleAnswer('a4')">Xem đáp án</button>
+      <div id="a4" class="answer">Không nhất thiết. Server trả tool result; AI/agent thường là bên diễn giải kết quả thành câu trả lời tự nhiên.</div>
+    </div>
+  </div>
+
+  <h2>10. Một câu kết để nhớ lâu</h2>
+  <div class="analogy">
+    <div class="big teal">MCP = ổ cắm chuẩn cho AI</div>
+    <p class="lead">
+      Spring Boot của bạn có “thiết bị” là các capability/business function.
+      <code>@McpTool</code> biến capability thành đầu cắm chuẩn; MCP client biết cách cắm vào;
+      còn AI quyết định lúc nào cần sử dụng nó.
+    </p>
+  </div>
+
+  <div class="footer">
+    <b>Nguồn tham khảo chính thức:</b><br>
+    Spring AI MCP overview:
+    <a href="https://docs.spring.io/spring-ai/reference/api/mcp/mcp-overview.html">docs.spring.io/.../mcp-overview.html</a><br>
+    Spring AI Streamable HTTP MCP Server:
+    <a href="https://docs.spring.io/spring-ai/reference/api/mcp/mcp-streamable-http-server-boot-starter-docs.html">docs.spring.io/.../mcp-streamable-http-server-boot-starter-docs.html</a><br><br>
+    Ghi chú: phần JSON được giản lược để phục vụ học khái niệm; framework/transport có thể bổ sung metadata, session và lifecycle messages.
+  </div>
+</div>
+
+<script>
+const stages = [
+  {
+    title:"① Client và server bắt tay",
+    body:`<p>Trước khi gọi tool, MCP client và server thiết lập context/capability qua lifecycle của MCP.</p>
+          <div class="packet"><div class="label">Tư duy</div>
+          <p>“Xin chào, tôi là MCP client. Bạn hỗ trợ những capability nào?”</p></div>
+          <p class="muted">Bạn chưa cần nhớ packet chi tiết ở bước đầu học.</p>`
+  },
+  {
+    title:"② Client hỏi: server có tool gì?",
+    body:`<pre>{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list"
+}</pre>
+          <p>Server có thể trả metadata kiểu <code>name</code>, <code>description</code>, <code>inputSchema</code>.</p>
+          <div class="callout ok">AI không cần đoán API. Nó được cung cấp mô tả tool và schema.</div>`
+  },
+  {
+    title:"③ Client gọi một tool cụ thể",
+    body:`<pre>{
+  "jsonrpc": "2.0",
+  "id": 123,
+  "method": "tools/call",
+  "params": {
+    "name": "get_order",
+    "arguments": { "id": 1001 }
+  }
+}</pre>
+          <p><b>HTTP</b> chỉ vận chuyển object này tới MCP endpoint.</p>`
+  },
+  {
+    title:"④ Spring AI route vào Java method",
+    body:`<pre>@McpTool(name = "get_order")
+Order getOrder(Long id) {
+    return orderService.getOrder(id);
+}</pre>
+          <p>Spring AI xử lý protocol/invocation; code của bạn tập trung vào capability.</p>
+          <div class="callout">Hãy nghĩ <code>@McpTool</code> giống một cổng vào khác bên cạnh <code>@RestController</code>.</div>`
+  },
+  {
+    title:"⑤ Result đi ngược trở lại",
+    body:`<pre>{
+  "jsonrpc": "2.0",
+  "id": 123,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "..."
+      }
+    ]
+  }
+}</pre>
+          <p>MCP client nhận result → agent/model đọc kết quả → trả lời user bằng ngôn ngữ tự nhiên.</p>
+          <div class="callout ok"><b>Spring Boot trả dữ liệu/tool result. AI mới là bên diễn giải.</b></div>`
+  }
+];
+
+const stage = document.getElementById("stage");
+function renderStage(i){
+  stage.innerHTML = `<h3>${stages[i].title}</h3>${stages[i].body}`;
+  document.querySelectorAll(".step").forEach((b,idx)=>b.classList.toggle("active",idx===i));
+}
+document.querySelectorAll(".step").forEach((b,i)=>b.addEventListener("click",()=>renderStage(i)));
+renderStage(0);
+
+document.querySelectorAll(".tab").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".tabpane").forEach(x=>x.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
+function toggleAnswer(id){ document.getElementById(id).classList.toggle("show"); }
+</script>
+</body>
+</html>
